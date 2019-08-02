@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Threading;
 
     using Newtonsoft.Json;
@@ -24,12 +23,7 @@
 
         public Trips GetTrips(BaseServiceDto dto)
         {
-            var apiDto = new ApiClientDto
-            {
-                Username = dto.Username,
-                Password = dto.Password,
-                Uri = UriHelper.Create(dto.Server, dto.Vin, "trips")
-            };
+            var apiDto = CreateDto(dto, "trips");
 
             var response = _apiClientService.MakeCallAsync<Trips>(apiDto).Result;
 
@@ -38,13 +32,8 @@
 
         public GetAttributesResultDto GetAttributes(BaseServiceDto dto)
         {
-            var apiDto = new ApiClientDto
-            {
-                Username = dto.Username,
-                Password = dto.Password,
-                Uri = UriHelper.Create(dto.Server, dto.Vin, "attributes")
-            };
-
+            var apiDto = CreateDto(dto, "attributes");
+            
             var ret = new GetAttributesResultDto
             {
                 RawResponse = _apiClientService.MakeCallAsync(apiDto).Result
@@ -58,15 +47,11 @@
 
         public GetPositionResultDto GetPosition(BaseServiceDto dto)
         {
-            var statusDto = new ApiClientDto
-            {
-                Username = dto.Username,
-                Password = dto.Password,
-                Uri = UriHelper.Create(dto.Server, dto.Vin, "position")
-            };
+            var apiDto = CreateDto(dto, "position");
+
             var ret = new GetPositionResultDto
             {
-                RawResponse = _apiClientService.MakeCallAsync(statusDto).Result
+                RawResponse = _apiClientService.MakeCallAsync(apiDto).Result
             };
             ret.Position = JsonConvert.DeserializeObject<CarPosition>(ret.RawResponse);
 
@@ -77,12 +62,7 @@
         {
             var ret = new GetStatusResultDto();
 
-            var statusDto = new ApiClientDto
-            {
-                Username = dto.Username,
-                Password = dto.Password,
-                Uri = UriHelper.Create(dto.Server, dto.Vin, "status")
-            };
+            var statusDto = CreateDto(dto, "status");
             var rawStatus = _apiClientService.MakeCallAsync(statusDto).Result;
 
             ret.Status = JsonConvert.DeserializeObject<Status>(rawStatus);
@@ -111,14 +91,7 @@
 
             var apiAction = dto.NewState == LockState.Unlocked ? "unlock" : "lock";
 
-            var lockDto = new ApiClientDto
-            {
-                Username = dto.Username,
-                Password = dto.Password,
-                Uri = UriHelper.Create(dto.Server, dto.Vin, apiAction),
-                RequestMethod = RequestMethod.POST,
-                BodyContent = "{\n\t\"clientAccuracy\":0,\n\t\"clientLatitude\":" + position.Position.Position.Latitude + ",\n\t\"clientLongitude\":" + position.Position.Position.Longitude + " \n}"
-            };
+            var lockDto = CreateDto(dto, apiAction, RequestMethod.POST, "{\n\t\"clientAccuracy\":0,\n\t\"clientLatitude\":" + position.Position.Position.Latitude + ",\n\t\"clientLongitude\":" + position.Position.Position.Longitude + " \n}");
 
             var response = _apiClientService.MakeCallAsync<ServiceResponse>(lockDto).Result;
 
@@ -160,6 +133,18 @@
             }
 
             return ret;
+        }
+
+        private ApiClientDto CreateDto(BaseServiceDto dto, string action, RequestMethod requestMethod = RequestMethod.GET, string body = null)
+        {
+            return new ApiClientDto
+            {
+                Username = dto.Username,
+                Password = dto.Password,
+                Uri = UriHelper.Create(dto.Server, dto.Vin, action),
+                RequestMethod = requestMethod,
+                BodyContent = body
+            };
         }
     }
 }
