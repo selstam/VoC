@@ -1,0 +1,5 @@
+﻿This piece of software has been heavilly inspired by the following sites/repos:
+
+https://github.com/andrew0x01/hubitat/blob/master/drivers/VOC/Volvo-On-Call.groovy
+
+https://github.com/molobrakos/volvooncall/blob/master/volvooncall/volvooncall.py
